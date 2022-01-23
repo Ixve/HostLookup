@@ -1,7 +1,5 @@
-import requests, psutil, os, json
-from colorama import init, Fore
+import requests, psutil, os, json, dns, dns.resolver
 from censys.search import CensysHosts
-init()
 
 #clearing cmd prompt/terminal to not make it cramped thing yes
 os.system('cls;clear')
@@ -31,6 +29,10 @@ if psutil.Process(ppid).name() == "pythonw.exe":
 #Lookup stuff thing yes
 domain = str(input("Domain/IPv4 to look up: "))
 
+#Setting up DNS lookup
+nameserver = dns.resolver.resolve(f'{domain}', 'NS')
+mx = dns.resolver.resolve(f'{domain}', 'MX')
+
 #Cloudflare check by checking ISP
 #A
 h = CensysHosts()
@@ -50,7 +52,9 @@ except Exception:
 if cfdc == "true":
     print("Would you like to search&dump Censys JSON data to 'dump.json'? [Y/N]")
     answer = str(input())
-    if answer == "y" or "Y":
+    if answer == "n" or "N":
+        exit()
+    elif answer == "y" or "Y":
         csquery_a = h.search(f"{domain}", per_page=1)
         with open('dump.json', 'w') as f:
             json.dump(csquery_a(), f, indent=4)
@@ -80,21 +84,26 @@ try:
     proxy = str(r["proxy"])
     hostname = str(r["hosting"])
     ipquery = str(r["query"])
+    print(f"IP Queried: {ipquery}")
     print(f"\nContinent: {continent}")
     print(f"Country: {country} (Country Code: {countryCode})")
     print(f"Region: {region} (Region Name: {regionName})")
     print(f"City: {city}")
     print(f"Zip Code: {zipCode}")
-    print(f"Latitude/Longitude: {lat}/{lon}")
+    print(f"Latitude/Longitude: {lat} / {lon}")
     print(f"Timezone: {timezone}")
     print(f"ISP: {isp}")
     print(f"Organization: {organization}")
     print(f"ASN: {asn}")
     print(f"Reverse DNS: {reverseDNS}")
+    for val in nameserver:
+        print("Nameserver: ", val.to_text())
+    for val in mx:
+        print("MX Record: ", val.to_text())
     print(f"Cellular Network? {cellularNetwork}")
     print(f"Proxy? {proxy}")
     print(f"Hosted? {hostname}")
-    print(f"IP Queried: {ipquery}")
+
 except Exception:
     print("An error has occured (B)")
     print(Exception)
@@ -104,11 +113,12 @@ except Exception:
 print("")
 print("Would you like to dump JSON data using Censys? [Y/N]")
 answer = str(input())
-if answer == "y" or "Y":
+if answer == "n" or "N":
+    exit()
+elif answer == "y" or "Y":
     csquery_b = h.search(f"{domain}", per_page=1)
     with open('dump.json', 'w') as f:
         json.dump(csquery_b(), f, indent=4)
         f.close()
         print("Dumped data to 'dump.json'")
         exit()
-
