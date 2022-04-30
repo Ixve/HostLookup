@@ -1,13 +1,13 @@
-import requests, psutil, os, json, dns, dns.resolver
+#i heart pep8
+import requests
+import psutil
+import os
+import json
+import dns
+import dns.resolver
 from censys.search import CensysHosts
 
-#clearing cmd prompt/terminal to not make it cramped thing yes
 os.system('cls;clear')
-
-#cfdc_flag
-cfdc = "false"
-
-#"Welcome Screen"
 print("""
   /$$   /$$                       /$$           /$$                           /$$                          
 | $$  | $$                      | $$          | $$                          | $$                          
@@ -26,15 +26,11 @@ if psutil.Process(ppid).name() == "pythonw.exe":
     print("Why are you running this in Python IDLE you psychopath")
     exit()
 
-#Lookup stuff thing yes
 domain = str(input("Domain/IPv4 to look up: "))
 
-#Setting up DNS lookup
 nameserver = dns.resolver.resolve(f'{domain}', 'NS')
 mx = dns.resolver.resolve(f'{domain}', 'MX')
 
-#Cloudflare check by checking ISP
-#A
 h = CensysHosts()
 cfcheck = requests.get(f"http://ip-api.com/json/{domain}?fields=512").json()
 cfhostname = "Cloudflare, Inc."
@@ -44,72 +40,39 @@ try:
         print("Cloudflare Detected")
         cfdc = "true"
 except Exception:
-    print("Invalid domain or a misc. error has occured (A)")
+    print("Invalid domain or a misc. error has occured")
     print(Exception)
     exit()
 
-#Censys Dump Thing #1
-if cfdc == "true":
-    print("Would you like to search&dump Censys JSON data to 'dump.json'? [Y/N]")
-    answer = str(input())
-    if answer == "n" or "N":
-        exit()
-    elif answer == "y" or "Y":
-        csquery_a = h.search(f"{domain}", per_page=1)
-        with open('dump.json', 'w') as f:
-            json.dump(csquery_a(), f, indent=4)
-            f.close()
-            print("Dumped data to 'dump.json'")
-            exit()
-
-#If Cloudflare not detected, continuing
-#B
 r = requests.get(f"http://ip-api.com/json/{domain}?fields=66846719").json()
 try:
-    continent = str(r["continent"])
-    country = str(r["country"])
-    countryCode = str(r["countryCode"])
-    region = str(r["region"])
-    regionName = str(r["regionName"])
-    city = str(r["city"])
-    zipCode = str(r["zip"])
     lat = str(r["lat"])
     lon = str(r["lon"])
-    timezone = str(r["timezone"])
-    isp = str(r["isp"])
-    organization = str(r["org"])
-    asn = str(r["as"])
-    reverseDNS = str(r["reverse"])
-    cellularNetwork = str(r["mobile"])
-    proxy = str(r["proxy"])
-    hostname = str(r["hosting"])
-    ipquery = str(r["query"])
-    print(f"IP Queried: {ipquery}")
-    print(f"\nContinent: {continent}")
-    print(f"Country: {country} (Country Code: {countryCode})")
-    print(f"Region: {region} (Region Name: {regionName})")
-    print(f"City: {city}")
-    print(f"Zip Code: {zipCode}")
+    print(f"IP Queried: ", r["query"])
+    print(f"\nContinent: ", r["continent"])
+    print(f"Country: ", r["country"], " (Country Code: ", r["countryCode"])
+    print(f"Region: ", r["region"], " (Region Name: ", r["regionName"])
+    print(f"City: ", r["city"])
+    print(f"Zip Code: ", r["zip"])
     print(f"Latitude/Longitude: {lat} / {lon}")
-    print(f"Timezone: {timezone}")
-    print(f"ISP: {isp}")
-    print(f"Organization: {organization}")
-    print(f"ASN: {asn}")
-    print(f"Reverse DNS: {reverseDNS}")
+    print(f"Timezone: ", r["timezone"])
+    print(f"ISP: ", r["isp"])
+    print(f"Organization: ", r["org"])
+    print(f"ASN: ", r["as"])
+    print(f"Reverse DNS: ", r["reverse"])
     for val in nameserver:
         print("Nameserver: ", val.to_text())
     for val in mx:
         print("MX Record: ", val.to_text())
-    print(f"Cellular Network? {cellularNetwork}")
-    print(f"Proxy? {proxy}")
-    print(f"Hosted? {hostname}")
+    print(f"Cellular Network? ", r["mobile"])
+    print(f"Proxy? ", r["proxy"])
+    print(f"Hosted? ", r["hosting"])
 
 except Exception:
-    print("An error has occured (B)")
+    print("An error has occured")
     print(Exception)
     exit()
 
-#Censys Dump Thing #2
 print("")
 print("Would you like to dump JSON data using Censys? [Y/N]")
 answer = str(input())
